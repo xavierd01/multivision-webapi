@@ -11,23 +11,6 @@ namespace MultivisionCoreAPI.Controllers
     {
         private readonly CourseContext _context;
 
-        [HttpGet]
-        public IEnumerable<Course> GetAll()
-        {
-            return _context.Courses.ToList();
-        }
-
-        [HttpGet("{id}", Name = "GetCourse")]
-        public IActionResult GetById(long id)
-        {
-            var course = _context.Courses.FirstOrDefault(c => c.Id == id);
-            if (course == null) 
-            {
-                return NotFound();
-            }
-            return new ObjectResult(course);
-        }
-
         public CoursesController(CourseContext context)
         {
             _context = context;
@@ -54,6 +37,76 @@ namespace MultivisionCoreAPI.Controllers
                 _context.Courses.AddRange(defaultCourses);
                 _context.SaveChanges();
             }
+        }
+
+        [HttpPost]
+        public IActionResult Create([FromBody] Course course)
+        {
+            if (course == null)
+            {
+                return BadRequest();
+            }
+
+            _context.Courses.Add(course);
+            _context.SaveChanges();
+
+            return CreatedAtRoute("GetCourse", new { id = course.Id}, course);
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(long id) 
+        {
+            var course = _context.Courses.FirstOrDefault(c => c.Id == id);
+            if (course == null)
+            {
+                return NotFound();
+            }
+
+            _context.Courses.Remove(course);
+            _context.SaveChanges();
+
+            return new NoContentResult();
+        }
+
+        [HttpGet]
+        public IEnumerable<Course> GetAll()
+        {
+            return _context.Courses.ToList();
+        }
+
+        [HttpGet("{id}", Name = "GetCourse")]
+        public IActionResult GetById(long id)
+        {
+            var course = _context.Courses.FirstOrDefault(c => c.Id == id);
+            if (course == null) 
+            {
+                return NotFound();
+            }
+            return new ObjectResult(course);
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult Update(long id, [FromBody] Course updatedCourse)
+        {
+            if (updatedCourse == null || updatedCourse.Id != id) 
+            {
+                return BadRequest();
+            }
+
+            var course = _context.Courses.FirstOrDefault(c => c.Id == updatedCourse.Id);
+            if (course == null)
+            {
+                return NotFound();
+            }
+
+            course.Title = updatedCourse.Title;
+            course.Featured = updatedCourse.Featured;
+            course.Published = updatedCourse.Published;
+            course.Tags = updatedCourse.Tags;
+
+            _context.Courses.Update(course);
+            _context.SaveChanges();
+            return new NoContentResult();
         }
     }
 }
